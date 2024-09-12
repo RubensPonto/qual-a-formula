@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação de Investimentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .summary-table {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .summary-table td {
+            padding: 8px;
+            font-weight: bold;
+        }
+
+        .summary-table th {
+            background-color: #f0f0f0;
+            padding: 10px;
+        }
+
+        .rendimento-input, .aporte-input {
+            width: 80px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Simulação de Investimentos</h1>
+
+    <div class="input-group">
+        <label for="aporte">Aporte Mensal (R$):</label>
+        <input type="number" id="aporte" placeholder="Digite o valor do aporte mensal">
+    </div>
+
+    <div class="input-group">
+        <label for="taxa">Taxa de Rendimento Mensal (%):</label>
+        <input type="number" id="taxa" placeholder="Digite a taxa de rendimento mensal">
+    </div>
+
+    <div class="input-group">
+        <label for="meses">Número de Meses:</label>
+        <input type="number" id="meses" placeholder="Digite o número de meses" value="120">
+    </div>
+
+    <button onclick="calcular()">Calcular</button>
+
+    <!-- Nova Tabela de Resumo -->
+    <table class="summary-table" id="resumo">
+        <tr>
+            <th>Ano e Meses</th>
+            <th>Total Aportado (R$)</th>
+            <th>Lucro (R$)</th>
+        </tr>
+        <tr>
+            <td id="anos-meses"></td>
+            <td id="total-aportado"></td>
+            <td id="lucro"></td>
+        </tr>
+    </table>
+
+    <table id="resultado">
+        <thead>
+            <tr>
+                <th>Mês</th>
+                <th>Aporte (R$)</th>
+                <th>Rendimento (%)</th>
+                <th>Lucro (R$)</th>
+                <th>Fechamento (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Resultados aparecerão aqui -->
+        </tbody>
+    </table>
+
+    <button onclick="recalcular()">Recalcular</button>
+</div>
+
+<script>
+    let rendimentos = [];  // Array para armazenar os rendimentos alterados
+    let aportes = [];      // Array para armazenar os aportes alterados
+
+    function calcular() {
+        const aporteInicial = parseFloat(document.getElementById('aporte').value);
+        const taxa = parseFloat(document.getElementById('taxa').value);
+        const meses = parseInt(document.getElementById('meses').value);
+        const tabela = document.getElementById('resultado').getElementsByTagName('tbody')[0];
+        const resumoAnosMeses = document.getElementById('anos-meses');
+        const resumoTotalAportado = document.getElementById('total-aportado');
+        const resumoLucro = document.getElementById('lucro');
+
+        tabela.innerHTML = "";  // Limpa os resultados anteriores
+        rendimentos = [];  // Limpa o array de rendimentos
+        aportes = [];      // Limpa o array de aportes
+
+        let fechamentoAnterior = 0;
+        let totalAportado = 0;
+
+        for (let i = 1; i <= meses; i++) {
+            let rendimentoAtual = taxa;  // Use a taxa padrão inicialmente
+            let aporteAtual = aporteInicial;
+
+            let lucro = (fechamentoAnterior + aporteAtual) * (rendimentoAtual / 100);
+            let fechamento = fechamentoAnterior + aporteAtual + lucro;
+
+            // Cria uma linha da tabela
+            let linha = tabela.insertRow();
+            linha.insertCell(0).textContent = i;  // Mês
+
+            // Coluna de aporte como input para o usuário alterar
+            let aporteInput = document.createElement('input');
+            aporteInput.type = 'number';
+            aporteInput.value = aporteAtual.toFixed(2);
+            aporteInput.className = 'aporte-input';
+            aporteInput.onchange = () => atualizarAporte(i - 1, aporteInput.value);
+            let aporteCell = linha.insertCell(1);
+            aporteCell.appendChild(aporteInput);
+
+            // Coluna de rendimento como input para o usuário alterar
+            let rendimentoInput = document.createElement('input');
+            rendimentoInput.type = 'number';
+            rendimentoInput.value = rendimentoAtual.toFixed(2);
+            rendimentoInput.className = 'rendimento-input';
+            rendimentoInput.onchange = () => atualizarRendimento(i - 1, rendimentoInput.value);
+            let rendimentoCell = linha.insertCell(2);
+            rendimentoCell.appendChild(rendimentoInput);
+
+            linha.insertCell(3).textContent = lucro.toFixed(2);  // Lucro
+            linha.insertCell(4).textContent = fechamento.toFixed(2);  // Fechamento
+
+            fechamentoAnterior = fechamento;
+            totalAportado += aporteAtual;
+            rendimentos.push(rendimentoAtual);  // Armazena o rendimento padrão
+            aportes.push(aporteAtual);  // Armazena o aporte padrão
+        }
+
+        // Cálculo de Anos e Meses
+        const anos = Math.floor(meses / 12);
+        const mesesRestantes = meses % 12;
+
+        // Atualizando a tabela de resumo
+        resumoAnosMeses.textContent = `${anos} anos e ${mesesRestantes} meses`;
+        resumoTotalAportado.textContent = `R$ ${totalAportado.toFixed(2)}`;
+
+        // Cálculo do lucro total
+        const lucroTotal = fechamentoAnterior - totalAportado;
+        resumoLucro.textContent = `R$ ${lucroTotal.toFixed(2)}`;
+    }
+
+    function atualizarRendimento(indice, novoRendimento) {
+        rendimentos[indice] = parseFloat(novoRendimento);  // Atualiza o rendimento no array
+    }
+
+    function atualizarAporte(indice, novoAporte) {
+        aportes[indice] = parseFloat(novoAporte);  // Atualiza o aporte no array
+    }
+
+    function recalcular() {
+        const tabela = document.getElementById('resultado').getElementsByTagName('tbody')[0];
+
+        let fechamentoAnterior = 0;
+        let totalAportado = 0;
+
+        // Recalcula a tabela com base nos aportes e rendimentos alterados
+        for (let i = 0; i < rendimentos.length; i++) {
+            const rendimentoAtual = rendimentos[i];
+            const aporteAtual = aportes[i];
+
+            let lucro = (fechamentoAnterior + aporteAtual) * (rendimentoAtual / 100);
+            let fechamento = fechamentoAnterior + aporteAtual + lucro;
+
+            // Atualiza as células da tabela
+            tabela.rows[i].cells[3].textContent = lucro.toFixed(2);  // Lucro
+            tabela.rows[i].cells[4].textContent = fechamento.toFixed(2);  // Fechamento
+
+            fechamentoAnterior = fechamento;
+            totalAportado += aporteAtual;
+        }
+
+        // Atualiza o lucro total e os anos
+        const resumoAnosMeses = document.getElementById('anos-meses');
+        const resumoTotalAportado = document.getElementById('total-aportado');
+        const resumoLucro = document.getElementById('lucro');
+
+        // Cálculo de Anos e Meses
+        const meses = rendimentos.length;
+        const anos = Math.floor(meses / 12);
+        const mesesRestantes = meses % 12;
+
+        // Atualizando a tabela de resumo
+        resumoAnosMeses.textContent = `${anos} anos e ${mesesRestantes} meses`;
+        resumoTotalAportado.textContent = `R$ ${totalAportado.toFixed(2)}`;
+
+        // Cálculo do lucro total
+        const lucroTotal = fechamentoAnterior - totalAportado;
+        resumoLucro.textContent = `R$ ${lucroTotal.toFixed(2)}`;
+    }
+</script>
+
+</body>
+</html>
